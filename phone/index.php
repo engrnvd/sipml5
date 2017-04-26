@@ -165,22 +165,12 @@
     <script src="//cdn.jsdelivr.net/angular.pusher/latest/pusher-angular.min.js"></script>
 
     <script src="/vendors/angular-custom/angular-custom.js"></script>
+    <script src="SIPml-api.js?svn=251" type="text/javascript"></script>
+    <script src="sipml5-service.js" type="text/javascript"></script>
+    <script src="app.js" type="text/javascript"></script>
 
-    <script>
-        (function () {
-            'use strict';
-            angular.module('myApp', [
-                'pusher-angular',
-                'toaster',
-                'ui.bootstrap',
-                'CustomAngular'
-            ]).controller('MainController', MainController);
-            function MainController($http, $scope, $interval, $pusher, toaster, $uibModal) {}
-        })();
-    </script>
 </head>
 <body class="hold-transition skin-blue sidebar-mini">
-
 <div class="main-wrapper" ng-app="myApp" ng-controller="MainController" ng-cloak>
     <div class="content-wrapper" style="margin: 1em 1em 0 1em">
         <div class="row">
@@ -190,31 +180,7 @@
                         <uib-tabset active="activeTab">
                             <uib-tab index="0">
                                 <uib-tab-heading><i class="fa fa-phone"></i></uib-tab-heading>
-                                <div class="phone-number">
-                                    <input class="form-control phone-input"
-                                           placeholder="Phone number or sip address">
-                                    <button class="btn btn-flat btn-primary call-btn">
-                                        <i class="fa fa-phone"></i>
-                                    </button>
-                                    <button class="btn btn-flat btn-primary call-btn">
-                                        <i class="fa fa-video-camera"></i>
-                                    </button>
-                                </div>
-                                <div class="clearfix"></div>
-                                <div class="caller-info text-center">
-                                    <div class="caller-img">
-                                        <i class="fa fa-user"></i>
-                                    </div>
-                                    <div class="caller-name">Caller Name</div>
-                                    <div class="call-duration">00:27</div>
-                                    <div class="call-controls">
-                                        <span class="fa-stack fa-lg hangup-btn">
-                                          <i class="fa fa-circle fa-stack-2x"></i>
-                                          <i class="fa fa-phone fa-stack-1x fa-inverse"></i>
-                                        </span>
-                                    </div>
-                                </div>
-
+                                <?php require_once 'phone.php'?>
                             </uib-tab>
                             <uib-tab index="1">
                                 <uib-tab-heading><i class="fa fa-history"></i></uib-tab-heading>

@@ -7,6 +7,7 @@
         'CustomAngular'
     ]).controller('MainController', MainController);
     function MainController($http, $scope, toaster, sipml5) {
+        $scope.sipml5 = sipml5;
         sipml5.init({
             stackConfig: {
                 realm: '64.141.146.78',
@@ -14,10 +15,10 @@
                 impu: 'sip:1103@64.141.146.78',
                 password: '1234pccw',
                 display_name: 'Advocate Three',
-                websocket_proxy_url: null
+                websocket_proxy_url: 'wss://64.141.146.78:8089/ws'
             }
         });
 
-        sipml5.register();
+        sipml5.state.callerNumber = '13174444444';
     }
 })();

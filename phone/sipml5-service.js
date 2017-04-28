@@ -7,19 +7,13 @@
                 initializing: false,
                 initialized: true,
                 errorMessage: '',
-                canRegister: false, // whether to enable register button
-                canUnRegister: false, // whether to enable logout button
                 registering: false,
                 registered: false,
-                canCall: false,
-                canHangup: false,
                 calling: false,
                 callConnected: false,
                 callFailed: false,
-                canTransferCall: false,
                 transferringCall: false,
                 callTransferred: false,
-                canHoldResume: false,
                 isCallOnHold: false,
                 isCallOnHoldByRemote: false,
                 callMuted: false,
@@ -165,7 +159,6 @@
                 }
             }
 
-            sip.state.canRegister = true;
             sip.configCall = {
                 audio_remote: sip.audioRemote,
                 video_local: sip.videoLocal,
@@ -185,10 +178,8 @@
         sip.register = function () {
             // catch exception for IE (DOM not ready)
             try {
-                sip.state.canRegister = false;
                 if (!sip.stackConfig.realm || !sip.stackConfig.impi || !sip.stackConfig.impu) {
                     sip.state.errorMessage = "Invalid config. Please contact developers.";
-                    sip.state.canRegister = true;
                     return;
                 }
 
@@ -204,7 +195,6 @@
                 sip.stack = new SIPml.Stack(sip.stackConfig);
                 if (sip.stack.start() != 0) {
                     sip.state.errorMessage = 'Failed to start the SIP stack';
-                    sip.state.canRegister = true;
                 }
             }
             catch (e) {
@@ -222,8 +212,6 @@
         // makes a call (SIP INVITE)
         sip.call = function (type) {
             sip.state.calling = true;
-            sip.state.canCall = false;
-            sip.state.canHangup = true;
             var phoneNumber = sip.state.callerNumber;
             if (sip.stack && !sip.sessionCall && phoneNumber) { // outbound call
                 if (type == 'call-screenshare') {
@@ -245,8 +233,6 @@
                 // make call
                 if (sip.sessionCall.call(phoneNumber) != 0) {
                     sip.sessionCall = null;
-                    sip.state.canCall = true;
-                    sip.state.canHangup = false;
                     sip.state.callFailed = true;
                 }
             }
@@ -298,7 +284,6 @@
                 return;
             }
 
-            sip.state.canTransferCall = false;
             var s_destination = prompt('Enter destination number', '');
             if (s_destination) {
                 sip.state.errorMessage = "Please enter a destination.";
@@ -307,7 +292,6 @@
 
             if (sip.sessionCall.transfer(s_destination) != 0) {
                 sip.state.errorMessage = 'Call transfer failed';
-                sip.state.canTransferCall = true;
                 return;
             }
 
@@ -322,12 +306,10 @@
             }
 
             var i_ret;
-            sip.state.canHoldResume = false;
             i_ret = sip.sessionCall.bHeld ? sip.sessionCall.resume() : sip.sessionCall.hold();
             if (i_ret != 0) {
                 sip.state.errorMessage = sip.sessionCall.bHeld ? 'Hold' : 'Resume';
                 sip.state.errorMessage += ' failed';
-                sip.state.canHoldResume = true;
             }
         }
 
@@ -410,13 +392,6 @@
             }
         }
 
-        function uiOnConnectionEvent(b_connected, b_connecting) { // should be enum: connecting, connected, terminating, terminated
-            sip.state.canRegister = !b_connected && !b_connecting;
-            sip.state.canUnRegister = b_connected || b_connecting;
-            sip.state.canCall = b_connected && tsk_utils_have_webrtc() && tsk_utils_have_stream();
-            sip.state.canHangup = sip.sessionCall;
-        }
-
         function uiVideoDisplayEvent(b_local, b_added) {
             var o_elt_video = b_local ? sip.videoLocal : sip.videoRemote;
 
@@ -497,11 +472,7 @@
             sip.state.callMuted = false;
 
             // btnCall.disabled = false;
-            sip.state.canCall = true;
-
             // btnHangUp.disabled = true;
-            sip.state.canHangup = false;
-
             sip.sessionCall = null;
 
             stopRingbackTone();
@@ -547,7 +518,6 @@
                     }
                     catch (e) {
                         sip.state.errorMessage = e;
-                        sip.state.canRegister = true;
                     }
                     break;
                 }
@@ -560,8 +530,6 @@
                     sip.stack = null;
                     sip.sessionRegister = null;
                     sip.sessionCall = null;
-
-                    uiOnConnectionEvent(false, false);
 
                     stopRingbackTone();
                     stopRingTone();
@@ -619,17 +587,13 @@
 
             switch (e.type) {
                 case 'connecting':
+                    break;
                 case 'connected':
                 {
                     var bConnected = (e.type == 'connected');
                     if (e.session == sip.sessionRegister) {
-                        uiOnConnectionEvent(bConnected, !bConnected);
                     }
                     else if (e.session == sip.sessionCall) {
-                        sip.state.canCall = false;
-                        sip.state.canHangup = true;
-                        sip.state.canTransferCall = true;
-
                         if (bConnected) {
                             stopRingbackTone();
                             stopRingTone();
@@ -653,7 +617,6 @@
                 case 'terminated':
                 {
                     if (e.session == sip.sessionRegister) {
-                        uiOnConnectionEvent(false, false);
 
                         sip.sessionCall = null;
                         sip.sessionRegister = null;
@@ -736,7 +699,6 @@
                             sip.sessionCall.bTransfering = false;
                             // this.AVSession.TransferCall(this.transferUri);
                         }
-                        sip.state.canHoldResume = true;
                         sip.sessionCall.bHeld = true;
                     }
                     break;
@@ -745,7 +707,6 @@
                 {
                     if (e.session == sip.sessionCall) {
                         sip.sessionCall.bTransfering = false;
-                        sip.state.canHoldResume = true;
                         sip.state.errorMessage = 'Failed to place remote party on hold';
                     }
                     break;
@@ -754,7 +715,6 @@
                 {
                     if (e.session == sip.sessionCall) {
                         sip.sessionCall.bTransfering = false;
-                        sip.state.canHoldResume = true;
                         sip.sessionCall.bHeld = false;
 
                         if (SIPml.isWebRtc4AllSupported()) { // IE don't provide stream callback yet
@@ -768,7 +728,6 @@
                 {
                     if (e.session == sip.sessionCall) {
                         sip.sessionCall.bTransfering = false;
-                        sip.state.canHoldResume = true;
                         sip.state.errorMessage = 'Failed to unhold call';
                     }
                     break;
@@ -833,7 +792,6 @@
                 {
                     if (e.session == sip.sessionCall) {
                         sip.state.errorMessage = 'Call transfer failed';
-                        sip.state.canTransferCall = true;
                         sip.state.transferringCall = false;
                         sip.state.callTransferred = false;
                     }
@@ -848,7 +806,6 @@
                             if (sip.sessionCall.bHeld) {
                                 sip.sessionCall.resume();
                             }
-                            sip.state.canTransferCall = true;
                         }
                     }
                     break;

@@ -71,7 +71,13 @@
         var viewVideoLocal, viewVideoRemote, viewLocalScreencast; // <video> (webrtc) or <div> (webrtc4all)
         var oConfigCall;
 
-        sip.init = function () {
+        sip.init = function (config) {
+            if (config.stackConfig) {
+                angular.extend(sip.stackConfig, config.stackConfig);
+                delete config.stackConfig;
+            }
+            angular.extend(sip, config);
+
             var readyStateTimer = setInterval(function () {
                 if (document.readyState === "complete") {
                     clearInterval(readyStateTimer);
@@ -177,7 +183,7 @@
         }
 
         // sends SIP REGISTER request to login
-        function sipRegister() {
+        sip.register = function () {
             // catch exception for IE (DOM not ready)
             try {
                 sip.state.canRegister = false;
@@ -206,14 +212,14 @@
                 sip.state.errorMessage = e;
             }
             sip.state.canRegister = true;
-        }
+        };
 
         // sends SIP REGISTER (expires=0) to logout
-        function sipUnRegister() {
+        sip.unRegister = function () {
             if (oSipStack) {
                 oSipStack.stop(); // shutdown all sessions
             }
-        }
+        };
 
         // makes a call (SIP INVITE)
         function sipCall(type, phoneNumber) {

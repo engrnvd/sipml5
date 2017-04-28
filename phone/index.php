@@ -166,8 +166,8 @@
 
     <script src="/vendors/angular-custom/angular-custom.js"></script>
     <script src="SIPml-api.js?svn=251" type="text/javascript"></script>
-    <script src="sipml5-service.js" type="text/javascript"></script>
     <script src="app.js" type="text/javascript"></script>
+    <script src="sipml5-service.js" type="text/javascript"></script>
 
 </head>
 <body class="hold-transition skin-blue sidebar-mini">

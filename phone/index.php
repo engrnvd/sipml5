@@ -168,6 +168,7 @@
     <script src="SIPml-api.js?svn=251" type="text/javascript"></script>
     <script src="app.js" type="text/javascript"></script>
     <script src="sipml5-service.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="style.css">
 
 </head>
 <body class="hold-transition skin-blue sidebar-mini">
@@ -176,7 +177,7 @@
         <div class="row">
             <div class="col-sm-4">
                 <div class="box box-primary">
-                    <div class="box-body">
+                    <div class="box-body phone-container">
                         <uib-tabset active="activeTab">
                             <uib-tab index="0">
                                 <uib-tab-heading><i class="fa fa-phone"></i></uib-tab-heading>

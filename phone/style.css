@@ -1,0 +1,15 @@
+.phone-container {
+    min-height: 25em;
+    position: relative;
+}
+
+.status-msg {
+    position: absolute;
+    font-style: italic;
+    left: 0;
+    bottom: 0;
+    background-color: rgba(255,255,255,0.9);
+    color: #333;
+    border-radius: 0 0.25em 0.25em 0;
+    padding: 0.5em;
+}

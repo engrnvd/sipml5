@@ -1,12 +1,13 @@
 (function () {
     angular.module('myApp').factory('sipml5', SIPml5);
 
-    function SIPml5() {
+    function SIPml5($rootScope) {
         var sip = {
             state: {
                 initializing: false,
                 initialized: true,
                 errorMessage: '',
+                message: 'test',
                 registering: false,
                 registered: false,
                 calling: false,
@@ -67,6 +68,12 @@
         // var sip.disableVideo = false;
         //var sip.videoLocal, sip.videoRemote, viewLocalScreencast; // <video> (webrtc) or <div> (webrtc4all)
         //var sip.configCall;
+
+        sip.setState = function (prop, value) {
+            $rootScope.$apply(function () {
+                sip.state[prop] = value;
+            });
+        };
 
         sip.init = function (config) {
             if (config.stackConfig) {
@@ -188,13 +195,12 @@
                     window.webkitNotifications.requestPermission();
                 }
 
-                // update debug level to be sure new values will be used if the user haven't updated the page
-                SIPml.setDebugLevel(sip.debugLevel);
-
                 // create SIP stack
+                sip.state.registering = true;
                 sip.stack = new SIPml.Stack(sip.stackConfig);
                 if (sip.stack.start() != 0) {
                     sip.state.errorMessage = 'Failed to start the SIP stack';
+                    sip.state.registering = false;
                 }
             }
             catch (e) {
@@ -519,10 +525,15 @@
                     catch (e) {
                         sip.state.errorMessage = e;
                     }
+                    sip.state.message = "";
                     break;
                 }
                 case 'stopping':
+                    sip.state.message = "Stopping...";
+                    break;
                 case 'stopped':
+                    sip.state.message = "";
+                    break;
                 case 'failed_to_start':
                 case 'failed_to_stop':
                 {
@@ -576,44 +587,51 @@
                 }
 
                 case 'starting':
+                    sip.state.message = "Starting...";
+                    break;
                 default:
                     break;
             }
+            //$rootScope.$broadcast('sipml-updated', sip);
         }
 
         // Callback function for SIP sessions (INVITE, REGISTER, MESSAGE...)
         function onSipEventSession(e /* SIPml.Session.Event */) {
             console.log('==session event==', e);
-
             switch (e.type) {
                 case 'connecting':
+                    if (e.session == sip.sessionRegister) { // registered
+                        sip.setState('message', 'Connecting...');
+                        // sip.state.message = 'Connecting...';
+                    }
                     break;
                 case 'connected':
                 {
-                    var bConnected = (e.type == 'connected');
-                    if (e.session == sip.sessionRegister) {
+                    if (e.session == sip.sessionRegister) { // registered
+                        sip.state.registered = true;
                     }
-                    else if (e.session == sip.sessionCall) {
-                        if (bConnected) {
-                            stopRingbackTone();
-                            stopRingTone();
+                    else if (e.session == sip.sessionCall) { // call connected
+                        stopRingbackTone();
+                        stopRingTone();
 
-                            if (sip.notifICall) {
-                                sip.notifICall.cancel();
-                                sip.notifICall = null;
-                            }
+                        if (sip.notifICall) {
+                            sip.notifICall.cancel();
+                            sip.notifICall = null;
                         }
 
-                        sip.state.callConnected = bConnected;
+                        sip.state.callConnected = true;
 
                         if (SIPml.isWebRtc4AllSupported()) { // IE don't provide stream callback
                             uiVideoDisplayEvent(false, true);
                             uiVideoDisplayEvent(true, true);
                         }
                     }
+                    sip.state.message = "";
                     break;
                 } // 'connecting' | 'connected'
                 case 'terminating':
+                    sip.state.message = "Terminating...";
+                    break;
                 case 'terminated':
                 {
                     if (e.session == sip.sessionRegister) {
@@ -624,6 +642,7 @@
                     else if (e.session == sip.sessionCall) {
                         uiCallTerminated(e.description);
                     }
+                    sip.state.message = "";
                     break;
                 } // 'terminating' | 'terminated'
 
@@ -825,8 +844,10 @@
                     break;
                 }
                 case 'sent_request':
+                    sip.state.message = "Request sent...";
                     break;
             }
+            //$rootScope.$broadcast('sipml-updated', sip);
         }
 
         return sip;

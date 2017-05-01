@@ -20,5 +20,10 @@
         });
 
         sipml5.state.callerNumber = '13174444444';
+        // $scope.$on('sipml-updated', function (updatedSip) {
+        //     $scope.$apply(function () {
+        //         angular.extend(sipml5, updatedSip);
+        //     });
+        // });
     }
 })();

@@ -1,4 +1,4 @@
-<div class="phone-number" ng-if="!sipml5.state.canRegister">
+<div class="phone-number" ng-if="sipml5.state">
     <input class="form-control phone-input"
            ng-model="sipml5.state.callerNumber"
            placeholder="Phone number or sip address">
@@ -9,14 +9,14 @@
         <i class="fa fa-video-camera"></i>
     </button>
 </div>
-<div class="phone-number" ng-if="sipml5.state.canRegister">
+<div class="phone-number" ng-if="sipml5.state">
     <input class="form-control phone-input"
            type="password"
            ng-model="sipml5.stackConfig.password"
            placeholder="Enter sip password to start using phone">
     <button class="btn btn-flat btn-primary call-btn"
         ng-click="sipml5.register()"
-        ng-disabled="!sipml5.state.canRegister">
+        ng-disabled="!sipml5.state">
         <i class="fa fa-sign-in"></i>
     </button>
 </div>
@@ -39,3 +39,4 @@
     <audio id="ringbacktone" loop src="sounds/ringbacktone.wav"></audio>
     <audio id="dtmfTone" src="sounds/dtmf.wav"></audio>
 </div>
+<div class="status-msg" ng-if="sip.state.message">{{sip.state.message}}</div>

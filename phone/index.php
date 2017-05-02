@@ -190,6 +190,10 @@
                     </div>
                 </div>
             </div>
+            <div class="col-sm-8">
+                <pre>{{sipml5.state | json}}</pre>
+                <pre>{{sipml5.stackConfig | json}}</pre>
+            </div>
         </div>
     </div>
 </div>

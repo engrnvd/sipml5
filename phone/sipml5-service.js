@@ -7,11 +7,12 @@
                 initializing: false,
                 initialized: true,
                 errorMessage: '',
-                message: 'test',
+                message: '',
                 registering: false,
                 registered: false,
                 calling: false,
                 callConnected: false,
+                callStartTime: null,
                 callFailed: false,
                 transferringCall: false,
                 callTransferred: false,
@@ -70,9 +71,13 @@
         //var sip.configCall;
 
         sip.setState = function (prop, value) {
-            $rootScope.$apply(function () {
+            try {
+                $rootScope.$apply(function () {
+                    sip.state[prop] = value;
+                });
+            } catch (e) {
                 sip.state[prop] = value;
-            });
+            }
         };
 
         sip.init = function (config) {
@@ -246,10 +251,10 @@
                 sip.sessionCall.accept(sip.configCall);
             }
 
-            if (sip.sessionCall) sip.state.callConnected = true;
+            //if (sip.sessionCall) sip.state.callConnected = true;
 
-            sip.state.calling = false;
-            sip.state.incomingCall = false;
+            //sip.state.calling = false;
+            //sip.state.incomingCall = false;
         };
 
         // Share entire desktop aor application using BFCP or WebRTC native implementation
@@ -354,6 +359,7 @@
 
         function startRingTone() {
             try {
+                var ringtone = document.getElementById("ringtone");
                 ringtone.play();
             }
             catch (e) {
@@ -362,6 +368,7 @@
 
         function stopRingTone() {
             try {
+                var ringtone = document.getElementById("ringtone");
                 ringtone.pause();
             }
             catch (e) {
@@ -370,6 +377,7 @@
 
         function startRingbackTone() {
             try {
+                var ringbacktone = document.getElementById("ringbacktone");
                 ringbacktone.play();
             }
             catch (e) {
@@ -378,6 +386,7 @@
 
         function stopRingbackTone() {
             try {
+                var ringbacktone = document.getElementById("ringbacktone");
                 ringbacktone.pause();
             }
             catch (e) {
@@ -505,6 +514,9 @@
         function onSipEventStack(e /*SIPml.Stack.Event*/) {
             console.log('==stack event== ', e);
             switch (e.type) {
+                case 'starting':
+                    sip.setState('message', "Starting...");
+                    break;
                 case 'started':
                 {
                     // catch exception for IE (DOM not ready)
@@ -523,21 +535,20 @@
                         sip.sessionRegister.register();
                     }
                     catch (e) {
-                        sip.state.errorMessage = e;
+                        sip.setState('errorMessage', e);
                     }
-                    sip.state.message = "";
+                    sip.setState('message', '');
                     break;
                 }
                 case 'stopping':
-                    sip.state.message = "Stopping...";
+                    sip.setState('message', 'Stopping...');
                     break;
                 case 'stopped':
-                    sip.state.message = "";
+                    sip.setState('message', '');
                     break;
                 case 'failed_to_start':
                 case 'failed_to_stop':
                 {
-                    var bFailure = (e.type == 'failed_to_start') || (e.type == 'failed_to_stop');
                     sip.stack = null;
                     sip.sessionRegister = null;
                     sip.sessionCall = null;
@@ -545,7 +556,7 @@
                     stopRingbackTone();
                     stopRingTone();
 
-                    sip.state.errorMessage = bFailure ? "Disconnected: " + e.description : "Disconnected.";
+                    sip.setState('errorMessage', "Disconnected: " + e.description);
                     break;
                 }
 
@@ -556,7 +567,7 @@
                         e.newSession.hangup(); // comment this line for multi-line support
                     }
                     else {
-                        sip.state.incomingCall = true;
+                        sip.setState('incomingCall', true);
                         sip.sessionCall = e.newSession;
                         // start listening for events
                         sip.sessionCall.setConfiguration(sip.configCall);
@@ -564,7 +575,7 @@
                         startRingTone();
 
                         var sRemoteNumber = (sip.sessionCall.getRemoteFriendlyName() || 'unknown');
-                        sip.state.callerName = sRemoteNumber;
+                        sip.setState('callerName', sRemoteNumber);
                         showNotifICall(sRemoteNumber);
                     }
                     break;
@@ -581,14 +592,10 @@
                 {
                     //divGlassPanel.style.visibility = 'hidden';
                     if (e.type == 'm_permission_refused') {
-                        uiCallTerminated('Media stream permission denied');
+                        sip.setState('errorMessage', 'Media stream permission denied.');
                     }
                     break;
                 }
-
-                case 'starting':
-                    sip.state.message = "Starting...";
-                    break;
                 default:
                     break;
             }
@@ -600,15 +607,13 @@
             console.log('==session event==', e);
             switch (e.type) {
                 case 'connecting':
-                    if (e.session == sip.sessionRegister) { // registered
-                        sip.setState('message', 'Connecting...');
-                        // sip.state.message = 'Connecting...';
-                    }
+                    sip.setState('message', 'Connecting...');
                     break;
                 case 'connected':
                 {
                     if (e.session == sip.sessionRegister) { // registered
-                        sip.state.registered = true;
+                        sip.setState('registering', false);
+                        sip.setState('registered', true);
                     }
                     else if (e.session == sip.sessionCall) { // call connected
                         stopRingbackTone();
@@ -619,30 +624,38 @@
                             sip.notifICall = null;
                         }
 
-                        sip.state.callConnected = true;
+                        sip.setState('callConnected', true);
+                        sip.setState('calling', false);
+                        var timeStamp = Math.floor(Date.now() / 1000);
+                        sip.setState('callStartTime', timeStamp);
 
                         if (SIPml.isWebRtc4AllSupported()) { // IE don't provide stream callback
                             uiVideoDisplayEvent(false, true);
                             uiVideoDisplayEvent(true, true);
                         }
                     }
-                    sip.state.message = "";
+                    sip.setState('message', '');
                     break;
                 } // 'connecting' | 'connected'
                 case 'terminating':
-                    sip.state.message = "Terminating...";
-                    break;
+                    sip.setState('message', "Terminating...");
+                    sip.setState('callStartTime', null);
                 case 'terminated':
                 {
                     if (e.session == sip.sessionRegister) {
-
                         sip.sessionCall = null;
                         sip.sessionRegister = null;
                     }
                     else if (e.session == sip.sessionCall) {
-                        uiCallTerminated(e.description);
+                        sip.sessionCall = null;
+                        sip.setState('callConnected', false);
+                        sip.setState('calling', false);
+                        sip.setState('isCallOnHold', false);
+                        sip.setState('callMuted', false);
+                        stopRingbackTone();
+                        stopRingTone();
                     }
-                    sip.state.message = "";
+                    sip.setState('message', "");
                     break;
                 } // 'terminating' | 'terminated'
 
@@ -704,8 +717,8 @@
                 case 'm_early_media':
                 {
                     if (e.session == sip.sessionCall) {
-                        stopRingbackTone();
-                        stopRingTone();
+                        // stopRingbackTone();
+                        // stopRingTone();
                         //txtCallStatus.innerHTML = '<i>Early media started</i>';
                     }
                     break;
@@ -726,7 +739,7 @@
                 {
                     if (e.session == sip.sessionCall) {
                         sip.sessionCall.bTransfering = false;
-                        sip.state.errorMessage = 'Failed to place remote party on hold';
+                        sip.setState('errorMessage', 'Failed to place remote party on hold');
                     }
                     break;
                 }
@@ -747,21 +760,21 @@
                 {
                     if (e.session == sip.sessionCall) {
                         sip.sessionCall.bTransfering = false;
-                        sip.state.errorMessage = 'Failed to unhold call';
+                        sip.setState('errorMessage', 'Failed to unhold call');
                     }
                     break;
                 }
                 case 'm_remote_hold':
                 {
                     if (e.session == sip.sessionCall) {
-                        sip.state.isCallOnHoldByRemote = true;
+                        sip.setState('isCallOnHoldByRemote', true);
                     }
                     break;
                 }
                 case 'm_remote_resume':
                 {
                     if (e.session == sip.sessionCall) {
-                        sip.state.isCallOnHoldByRemote = false;
+                        sip.setState('isCallOnHoldByRemote', false);
                     }
                     break;
                 }
@@ -776,8 +789,8 @@
                 case 'o_ect_trying':
                 {
                     if (e.session == sip.sessionCall) {
-                        sip.state.transferringCall = true;
-                        sip.state.callTransferred = false;
+                        sip.setState('transferringCall', true);
+                        sip.setState('callTransferred', false);
                         //txtCallStatus.innerHTML = '<i>Call transfer in progress...</i>';
                     }
                     break;
@@ -785,8 +798,8 @@
                 case 'o_ect_accepted':
                 {
                     if (e.session == sip.sessionCall) {
-                        sip.state.transferringCall = false;
-                        sip.state.callTransferred = true;
+                        sip.setState('transferringCall', false);
+                        sip.setState('callTransferred', true);
                         // txtCallStatus.innerHTML = '<i>Call transfer accepted</i>';
                     }
                     break;
@@ -795,8 +808,8 @@
                 case 'i_ect_completed':
                 {
                     if (e.session == sip.sessionCall) {
-                        sip.state.transferringCall = false;
-                        sip.state.callTransferred = true;
+                        sip.setState('transferringCall', false);
+                        sip.setState('callTransferred', true);
                         // txtCallStatus.innerHTML = '<i>Call transfer completed</i>';
                         // btnTransfer.disabled = false;
                         if (sip.sessionTransferCall) {
@@ -810,9 +823,9 @@
                 case 'i_ect_failed':
                 {
                     if (e.session == sip.sessionCall) {
-                        sip.state.errorMessage = 'Call transfer failed';
-                        sip.state.transferringCall = false;
-                        sip.state.callTransferred = false;
+                        sip.setState('errorMessage', 'Call transfer failed');
+                        sip.setState('transferringCall', false);
+                        sip.setState('callTransferred', false);
                     }
                     break;
                 }
@@ -835,7 +848,7 @@
                         var s_message = "Do you accept call transfer to [" + e.getTransferDestinationFriendlyName() + "]?";//FIXME
                         if (confirm(s_message)) {
                             //txtCallStatus.innerHTML = "<i>Call transfer in progress...</i>";
-                            sip.state.transferringCall = true;
+                            sip.setState('transferringCall', true);
                             sip.sessionCall.acceptTransfer();
                             break;
                         }
@@ -844,7 +857,7 @@
                     break;
                 }
                 case 'sent_request':
-                    sip.state.message = "Request sent...";
+                    // sip.setState('message', "Request sent...");
                     break;
             }
             //$rootScope.$broadcast('sipml-updated', sip);

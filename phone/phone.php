@@ -34,9 +34,9 @@
         <span>{{sipml5.state.callerName || sipml5.state.callerNumber}}</span>
         <span ng-if="sipml5.state.calling">...</span>
     </div>
-    <div class="call-duration">00:27</div>
+    <div class="call-duration" ng-if="sipml5.state.callDuration">{{sipml5.state.callDuration | duration:'%h%:%m%:%s%'}}</div>
     <div class="call-controls">
-        <span class="fa-stack fa-lg hangup-btn">
+        <span class="fa-stack fa-lg hangup-btn" ng-click="sipml5.hangup()">
           <i class="fa fa-circle fa-stack-2x"></i>
           <i class="fa fa-phone fa-stack-1x fa-inverse"></i>
         </span>
@@ -48,4 +48,5 @@
 <audio id="ringbacktone" loop src="sounds/ringbacktone.wav"></audio>
 <audio id="dtmfTone" src="sounds/dtmf.wav"></audio>
 
+<div class="status-msg text-danger" ng-if="sipml5.state.errorMessage">{{sipml5.state.errorMessage}}</div>
 <div class="status-msg" ng-if="sipml5.state.message">{{sipml5.state.message}}</div>

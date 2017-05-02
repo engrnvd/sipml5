@@ -1,7 +1,7 @@
 (function () {
     angular.module('myApp').factory('sipml5', SIPml5);
 
-    function SIPml5($rootScope) {
+    function SIPml5($rootScope, $interval) {
         var sip = {
             state: {
                 initializing: false,
@@ -12,7 +12,7 @@
                 registered: false,
                 calling: false,
                 callConnected: false,
-                callStartTime: null,
+                callDuration: 0,
                 callFailed: false,
                 transferringCall: false,
                 callTransferred: false,
@@ -36,6 +36,7 @@
             zeroArtifacts: false,
             nativeDebug: false,
             disableVideo: false,
+            callTimerId: null,
             // bandwidth: {audio: undefined, video: undefined},
             // videoSize: {minWidth: undefined, minHeight: undefined, maxWidth: undefined, maxHeight: undefined},
             stackConfig: {
@@ -58,6 +59,18 @@
                     {name: 'Organization', value: 'Doubango Telecom'}
                 ]
             }
+        };
+
+        sip.startCallTimer = function () {
+            sip.callTimerId = $interval(function () {
+                sip.state.callDuration ++;
+            }, 1000);
+        };
+        
+        sip.stopCallTimer = function () {
+            sip.state.callDuration = 0;
+            $interval.cancel(sip.callTimerId);
+            sip.callTimerId = null;
         };
 
         // var sTransferNumber;
@@ -346,17 +359,6 @@
             }
         };
 
-        function sipSendDTMF(c) {
-            if (sip.sessionCall && c) {
-                if (sip.sessionCall.dtmf(c) == 0) {
-                    try {
-                        dtmfTone.play();
-                    } catch (e) {
-                    }
-                }
-            }
-        }
-
         function startRingTone() {
             try {
                 var ringtone = document.getElementById("ringtone");
@@ -608,6 +610,9 @@
             switch (e.type) {
                 case 'connecting':
                     sip.setState('message', 'Connecting...');
+                    if (e.session == sip.sessionCall) {
+                        startRingbackTone();
+                    }
                     break;
                 case 'connected':
                 {
@@ -626,8 +631,7 @@
 
                         sip.setState('callConnected', true);
                         sip.setState('calling', false);
-                        var timeStamp = Math.floor(Date.now() / 1000);
-                        sip.setState('callStartTime', timeStamp);
+                        sip.startCallTimer();
 
                         if (SIPml.isWebRtc4AllSupported()) { // IE don't provide stream callback
                             uiVideoDisplayEvent(false, true);
@@ -639,7 +643,6 @@
                 } // 'connecting' | 'connected'
                 case 'terminating':
                     sip.setState('message', "Terminating...");
-                    sip.setState('callStartTime', null);
                 case 'terminated':
                 {
                     if (e.session == sip.sessionRegister) {
@@ -647,6 +650,7 @@
                         sip.sessionRegister = null;
                     }
                     else if (e.session == sip.sessionCall) {
+                        sip.stopCallTimer();
                         sip.sessionCall = null;
                         sip.setState('callConnected', false);
                         sip.setState('calling', false);
@@ -707,7 +711,7 @@
                     if (e.session == sip.sessionCall) {
                         var iSipResponseCode = e.getSipResponseCode();
                         if (iSipResponseCode == 180 || iSipResponseCode == 183) {
-                            startRingbackTone();
+                            // startRingbackTone();
                             //txtCallStatus.innerHTML = '<i>Remote ringing...</i>';
                         }
                     }

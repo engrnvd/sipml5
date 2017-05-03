@@ -48,5 +48,8 @@
 <audio id="ringbacktone" loop src="sounds/ringbacktone.wav"></audio>
 <audio id="dtmfTone" src="sounds/dtmf.wav"></audio>
 
-<div class="status-msg text-danger" ng-if="sipml5.state.errorMessage">{{sipml5.state.errorMessage}}</div>
+<div class="status-msg text-danger" ng-if="sipml5.state.errorMessage">
+    <b>Error: </b>
+    {{sipml5.state.errorMessage}}
+</div>
 <div class="status-msg" ng-if="sipml5.state.message">{{sipml5.state.message}}</div>

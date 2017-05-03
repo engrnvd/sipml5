@@ -37,8 +37,6 @@
             nativeDebug: false,
             disableVideo: false,
             callTimerId: null,
-            // bandwidth: {audio: undefined, video: undefined},
-            // videoSize: {minWidth: undefined, minHeight: undefined, maxWidth: undefined, maxHeight: undefined},
             stackConfig: {
                 realm: '',
                 impi: '',
@@ -86,6 +84,8 @@
         sip.setState = function (prop, value) {
             try {
                 $rootScope.$apply(function () {
+                    if (prop == 'errorMessage') sip.state.message = '';
+                    if (prop == 'message') sip.state.errorMessage = '';
                     sip.state[prop] = value;
                 });
             } catch (e) {
@@ -248,9 +248,6 @@
                         return;
                     }
                 }
-
-                // sip.configCall.bandwidth = sip.bandwidth;
-                // sip.configCall.video_size = sip.videoSize;
 
                 // create call session
                 sip.sessionCall = sip.stack.newSession(type, sip.configCall);
@@ -540,6 +537,8 @@
                         sip.setState('errorMessage', e);
                     }
                     sip.setState('message', '');
+                    sip.setState('registering', false);
+                    sip.setState('registered', true);
                     break;
                 }
                 case 'stopping':
@@ -547,6 +546,8 @@
                     break;
                 case 'stopped':
                     sip.setState('message', '');
+                    sip.setState('registering', false);
+                    sip.setState('registered', false);
                     break;
                 case 'failed_to_start':
                 case 'failed_to_stop':
@@ -559,6 +560,8 @@
                     stopRingTone();
 
                     sip.setState('errorMessage', "Disconnected: " + e.description);
+                    sip.setState('registering', false);
+                    sip.setState('registered', false);
                     break;
                 }
 
@@ -578,7 +581,7 @@
 
                         var sRemoteNumber = (sip.sessionCall.getRemoteFriendlyName() || 'unknown');
                         sip.setState('callerName', sRemoteNumber);
-                        showNotifICall(sRemoteNumber);
+                        sip.setState('callerNumber', sip.sessionCall.getRemoteUri().replace(/<|>/g, ''));
                     }
                     break;
                 }

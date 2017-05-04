@@ -614,7 +614,7 @@
                 case 'connecting':
                     sip.setState('message', 'Connecting...');
                     if (e.session == sip.sessionCall) {
-                        startRingbackTone();
+                        //startRingbackTone();
                     }
                     break;
                 case 'connected':
@@ -721,8 +721,7 @@
                     if (e.session == sip.sessionCall) {
                         var iSipResponseCode = e.getSipResponseCode();
                         if (iSipResponseCode == 180 || iSipResponseCode == 183) {
-                            // startRingbackTone();
-                            //txtCallStatus.innerHTML = '<i>Remote ringing...</i>';
+                            startRingbackTone();
                         }
                     }
                     break;

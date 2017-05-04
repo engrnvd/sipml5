@@ -75,9 +75,6 @@
         //var oRingTone, oRingbackTone;
         //var sip.stack, sip.sessionRegister, sip.sessionCall, sip.sessionTransferCall;
         //var sip.videoRemote, sip.videoLocal, sip.audioRemote;
-        //var sip.state.fullScreen = false;
-        //var sip.notifICall;
-        // var sip.disableVideo = false;
         //var sip.videoLocal, sip.videoRemote, viewLocalScreencast; // <video> (webrtc) or <div> (webrtc4all)
         //var sip.configCall;
 
@@ -392,20 +389,6 @@
             }
         }
 
-        function showNotifICall(s_number) {
-            // permission already asked when we registered
-            if (window.webkitNotifications && window.webkitNotifications.checkPermission() == 0) {
-                if (sip.notifICall) {
-                    sip.notifICall.cancel();
-                }
-                sip.notifICall = window.webkitNotifications.createNotification('images/sipml-34x39.png', 'Incaming call', 'Incoming call from ' + s_number);
-                sip.notifICall.onclose = function () {
-                    sip.notifICall = null;
-                };
-                sip.notifICall.show();
-            }
-        }
-
         function uiVideoDisplayEvent(b_local, b_added) {
             var o_elt_video = b_local ? sip.videoLocal : sip.videoRemote;
 
@@ -417,96 +400,6 @@
                 o_elt_video.style.opacity = 0;
                 //fullScreen(false);
             }
-        }
-
-        function uiVideoDisplayShowHide(b_show) {
-            if (b_show) {
-                tdVideo.style.height = '340px';
-                divVideo.style.height = navigator.appName == 'Microsoft Internet Explorer' ? '100%' : '340px';
-            }
-            else {
-                tdVideo.style.height = '0px';
-                divVideo.style.height = '0px';
-            }
-            btnFullScreen.disabled = !b_show;
-        }
-
-        function uiDisableCallOptions() {
-            if (window.localStorage) {
-                window.localStorage.setItem('org.doubango.expert.disable_callbtn_options', 'true');
-                uiBtnCallSetText('Call');
-                alert('Use expert view to enable the options again (/!\\requires re-loading the page)');
-            }
-        }
-
-        function uiBtnCallSetText(s_text) {
-            switch (s_text) {
-                case "Call":
-                {
-                    var bDisableCallBtnOptions = (window.localStorage && window.localStorage.getItem('org.doubango.expert.disable_callbtn_options') == "true");
-                    btnCall.value = btnCall.innerHTML = bDisableCallBtnOptions ? 'Call' : 'Call <span id="spanCaret" class="caret">';
-                    btnCall.setAttribute("class", bDisableCallBtnOptions ? "btn btn-primary" : "btn btn-primary dropdown-toggle");
-                    btnCall.onclick = bDisableCallBtnOptions ? function () {
-                        sip.call(sip.disableVideo ? 'call-audio' : 'call-audiovideo');
-                    } : null;
-                    ulCallOptions.style.visibility = bDisableCallBtnOptions ? "hidden" : "visible";
-                    if (!bDisableCallBtnOptions && ulCallOptions.parentNode != divBtnCallGroup) {
-                        divBtnCallGroup.appendChild(ulCallOptions);
-                    }
-                    else if (bDisableCallBtnOptions && ulCallOptions.parentNode == divBtnCallGroup) {
-                        document.body.appendChild(ulCallOptions);
-                    }
-
-                    break;
-                }
-                default:
-                {
-                    btnCall.value = btnCall.innerHTML = s_text;
-                    btnCall.setAttribute("class", "btn btn-primary");
-                    btnCall.onclick = function () {
-                        sip.call(sip.disableVideo ? 'call-audio' : 'call-audiovideo');
-                    };
-                    ulCallOptions.style.visibility = "hidden";
-                    if (ulCallOptions.parentNode == divBtnCallGroup) {
-                        document.body.appendChild(ulCallOptions);
-                    }
-                    break;
-                }
-            }
-        }
-
-        function uiCallTerminated(s_description) {
-            // uiBtnCallSetText("Call");
-            // btnHangUp.value = 'HangUp';
-
-            // btnHoldResume.value = 'hold';
-            sip.state.isCallOnHold = false;
-
-            // btnMute.value = "Mute";
-            sip.state.callMuted = false;
-
-            // btnCall.disabled = false;
-            // btnHangUp.disabled = true;
-            sip.sessionCall = null;
-
-            stopRingbackTone();
-            stopRingTone();
-
-            //txtCallStatus.innerHTML = "<i>" + s_description + "</i>";
-            // uiVideoDisplayShowHide(false);
-            //divCallOptions.style.opacity = 0;
-
-            if (sip.notifICall) {
-                sip.notifICall.cancel();
-                sip.notifICall = null;
-            }
-
-            //uiVideoDisplayEvent(false, false);
-            //uiVideoDisplayEvent(true, false);
-
-            // setTimeout(function () {
-            //     if (!sip.sessionCall) txtCallStatus.innerHTML = '';
-            // }, 2500);
         }
 
         // Callback function for SIP Stacks
@@ -588,14 +481,11 @@
 
                 case 'm_permission_requested':
                 {
-                    // grey background
-                    //divGlassPanel.style.visibility = 'visible';
                     break;
                 }
                 case 'm_permission_accepted':
                 case 'm_permission_refused':
                 {
-                    //divGlassPanel.style.visibility = 'hidden';
                     if (e.type == 'm_permission_refused') {
                         sip.setState('errorMessage', 'Media stream permission denied.');
                     }
@@ -604,7 +494,6 @@
                 default:
                     break;
             }
-            //$rootScope.$broadcast('sipml-updated', sip);
         }
 
         // Callback function for SIP sessions (INVITE, REGISTER, MESSAGE...)
@@ -626,11 +515,6 @@
                     else if (e.session == sip.sessionCall) { // call connected
                         stopRingbackTone();
                         stopRingTone();
-
-                        if (sip.notifICall) {
-                            sip.notifICall.cancel();
-                            sip.notifICall = null;
-                        }
 
                         sip.setState('callConnected', true);
                         sip.setState('calling', false);

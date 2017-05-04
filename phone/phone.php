@@ -39,13 +39,24 @@
     </div>
     <div class="call-duration" ng-if="sipml5.state.callDuration">{{sipml5.state.callDuration | duration:'%h%:%m%:%s%'}}</div>
     <div class="call-controls">
-        <span class="fa-stack fa-lg accept-call-btn"
+        <span class="fa-stack fa-lg text-info call-control"
+              ng-if="sipml5.state.callConnected"
+              uib-tooltip="{{sipml5.state.callMuted? 'Unmute' : 'Mute'}}"
+              ng-click="sipml5.toggleMute()">
+          <i class="fa fa-circle fa-stack-2x"></i>
+          <i class="fa fa-microphone fa-stack-1x fa-inverse" ng-if="!sipml5.state.callMuted"></i>
+          <i class="fa fa-microphone-slash fa-stack-1x fa-inverse" ng-if="sipml5.state.callMuted"></i>
+        </span>
+        <span class="fa-stack fa-lg accept-call-btn call-control"
               ng-if="sipml5.state.incomingCall && !sipml5.state.callConnected"
+              uib-tooltip="{{sipml5.state.incomingCall? 'Accept' : ''}}"
               ng-click="sipml5.call()">
           <i class="fa fa-circle fa-stack-2x"></i>
           <i class="fa fa-phone fa-stack-1x fa-inverse"></i>
         </span>
-        <span class="fa-stack fa-lg hangup-btn" ng-click="sipml5.hangup()">
+        <span class="fa-stack fa-lg hangup-btn call-control"
+              uib-tooltip="{{(sipml5.state.incomingCall && !sipml5.state.callConnected)? 'Reject' : 'Hangup'}}"
+              ng-click="sipml5.hangup()">
           <i class="fa fa-circle fa-stack-2x"></i>
           <i class="fa fa-phone fa-stack-1x fa-inverse"></i>
         </span>

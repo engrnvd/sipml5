@@ -232,7 +232,6 @@
 
         // makes a call (SIP INVITE)
         sip.call = function (type) {
-            console.log(sip.sessionCall);
             try {
                 var phoneNumber = sip.state.callerNumber;
                 if (sip.stack && !sip.sessionCall && phoneNumber) { // outbound call
@@ -339,19 +338,18 @@
         }
 
         // Mute or Unmute the call
-        function sipToggleMute() {
+        sip.toggleMute = function () {
             if (sip.sessionCall) {
                 var i_ret;
-                var muted = !sip.sessionCall.bMute;
+                var muted = !sip.state.callMuted;
                 i_ret = sip.sessionCall.mute('audio'/*could be 'video'*/, muted);
                 if (i_ret != 0) {
-                    sip.state.errorMessage = muted? 'Unmute' : 'Mute';
-                    sip.state.errorMessage += ' failed';
+                    sip.state.errorMessage = muted ? 'Unmute failed' : 'Mute failed';
                     return;
                 }
-                sip.sessionCall.bMute = muted;
+                sip.state.callMuted = muted;
             }
-        }
+        };
 
         // terminates the call (SIP BYE or CANCEL)
         sip.hangup = function () {

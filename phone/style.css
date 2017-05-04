@@ -18,8 +18,10 @@
 .status-msg.text-danger {
     color: #a94442 !important;
 }
+.call-control {
+    cursor: pointer;
+}
 
 .caller-info .accept-call-btn {
     color: #008d4c;
-    cursor: pointer;
 }

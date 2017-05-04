@@ -323,8 +323,8 @@
         }
 
         // holds or resumes the call
-        function sipToggleHoldResume() {
-            if (sip.sessionCall) {
+        sip.toggleHoldResume = function () {
+            if (!sip.sessionCall) {
                 sip.state.errorMessage = 'No active call to hold / resume';
                 return;
             }
@@ -335,7 +335,7 @@
                 sip.state.errorMessage = sip.sessionCall.bHeld ? 'Hold' : 'Resume';
                 sip.state.errorMessage += ' failed';
             }
-        }
+        };
 
         // Mute or Unmute the call
         sip.toggleMute = function () {
@@ -631,9 +631,9 @@
                     if (e.session == sip.sessionCall) {
                         if (sip.sessionCall.bTransfering) {
                             sip.sessionCall.bTransfering = false;
-                            // this.AVSession.TransferCall(this.transferUri);
                         }
                         sip.sessionCall.bHeld = true;
+                        sip.setState('isCallOnHold', true);
                     }
                     break;
                 }
@@ -641,6 +641,7 @@
                 {
                     if (e.session == sip.sessionCall) {
                         sip.sessionCall.bTransfering = false;
+                        sip.setState('isCallOnHold', false);
                         sip.setState('errorMessage', 'Failed to place remote party on hold');
                     }
                     break;
@@ -650,6 +651,7 @@
                     if (e.session == sip.sessionCall) {
                         sip.sessionCall.bTransfering = false;
                         sip.sessionCall.bHeld = false;
+                        sip.setState('isCallOnHold', false);
 
                         if (SIPml.isWebRtc4AllSupported()) { // IE don't provide stream callback yet
                             uiVideoDisplayEvent(false, true);
@@ -662,7 +664,7 @@
                 {
                     if (e.session == sip.sessionCall) {
                         sip.sessionCall.bTransfering = false;
-                        sip.setState('errorMessage', 'Failed to unhold call');
+                        sip.setState('errorMessage', 'Failed to resume call');
                     }
                     break;
                 }

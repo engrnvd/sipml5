@@ -39,6 +39,16 @@
     </div>
     <div class="call-duration" ng-if="sipml5.state.callDuration">{{sipml5.state.callDuration | duration:'%h%:%m%:%s%'}}</div>
     <div class="call-controls">
+        <!--Hold / Resume-->
+        <span class="fa-stack fa-lg text-info call-control btn-hold-resume"
+              ng-if="sipml5.state.callConnected"
+              uib-tooltip="{{sipml5.state.isCallOnHold? 'Resume the call' : 'Put the call on hold'}}"
+              ng-click="sipml5.toggleHoldResume()">
+          <i class="fa fa-circle fa-stack-2x"></i>
+          <i class="fa fa-play fa-stack-1x fa-inverse" ng-if="sipml5.state.isCallOnHold"></i>
+          <i class="fa fa-pause fa-sm fa-stack-1x fa-inverse" ng-if="!sipml5.state.isCallOnHold"></i>
+        </span>
+        <!--Mute / Unmute-->
         <span class="fa-stack fa-lg text-info call-control"
               ng-if="sipml5.state.callConnected"
               uib-tooltip="{{sipml5.state.callMuted? 'Unmute' : 'Mute'}}"
@@ -47,6 +57,7 @@
           <i class="fa fa-microphone fa-stack-1x fa-inverse" ng-if="!sipml5.state.callMuted"></i>
           <i class="fa fa-microphone-slash fa-stack-1x fa-inverse" ng-if="sipml5.state.callMuted"></i>
         </span>
+        <!--Accept call-->
         <span class="fa-stack fa-lg accept-call-btn call-control"
               ng-if="sipml5.state.incomingCall && !sipml5.state.callConnected"
               uib-tooltip="{{sipml5.state.incomingCall? 'Accept' : ''}}"
@@ -54,6 +65,7 @@
           <i class="fa fa-circle fa-stack-2x"></i>
           <i class="fa fa-phone fa-stack-1x fa-inverse"></i>
         </span>
+        <!--Hangup / Reject-->
         <span class="fa-stack fa-lg hangup-btn call-control"
               uib-tooltip="{{(sipml5.state.incomingCall && !sipml5.state.callConnected)? 'Reject' : 'Hangup'}}"
               ng-click="sipml5.hangup()">

@@ -215,6 +215,7 @@
                 <label>Incoming: <input type="checkbox" ng-model="sipml5.state.incomingCall"></label><br>
                 <label>Connected: <input type="checkbox" ng-model="sipml5.state.callConnected"></label><br>
                 <label>Calling: <input type="checkbox" ng-model="sipml5.state.calling"></label><br>
+                <label>Call on hold?: <input type="checkbox" ng-model="sipml5.state.isCallOnHold"></label><br>
                 <button ng-click="sipml5.startCallTimer()">Start Call Timer</button>
                 <button ng-click="sipml5.stopCallTimer()">Stop Call Timer</button>
             </div>

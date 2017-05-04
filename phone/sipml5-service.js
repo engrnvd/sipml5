@@ -659,10 +659,17 @@
                         sip.setState('calling', false);
                         sip.setState('isCallOnHold', false);
                         sip.setState('callMuted', false);
+                        sip.setState('incomingCall', false);
+                        sip.setState('transferringCall', false);
+                        sip.setState('callTransferred', false);
+                        sip.setState('isCallOnHold', false);
+                        sip.setState('isCallOnHoldByRemote', false);
+                        sip.setState('callerName', '');
+                        sip.setState('callerNumber', '');
                         stopRingbackTone();
                         stopRingTone();
                     }
-                    sip.setState('message', "");
+                    sip.setState('message', e.description);
                     break;
                 } // 'terminating' | 'terminated'
 

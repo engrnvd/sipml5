@@ -13,29 +13,38 @@
     <input class="form-control phone-input"
            ng-model="sipml5.state.callerNumber"
            placeholder="Phone number or sip address">
-    <button class="btn btn-flat btn-primary call-btn"
-        ng-disabled="sipml5.state.calling || sipml5.state.callConnected"
+    <button class="btn btn-flat btn-success call-btn"
+        ng-disabled="sipml5.state.calling || sipml5.state.callConnected || sipml5.state.incomingCall"
         ng-click="sipml5.call('call-audio')">
         <i class="fa fa-phone"></i>
     </button>
-    <button class="btn btn-flat btn-primary call-btn"
-        ng-disabled="sipml5.state.calling || sipml5.state.callConnected"
+    <button class="btn btn-flat btn-success call-btn"
+        ng-disabled="sipml5.state.calling || sipml5.state.callConnected || sipml5.state.incomingCall"
         ng-click="sipml5.call('call-audiovideo')">
         <i class="fa fa-video-camera"></i>
     </button>
 </div>
 <div class="clearfix"></div>
-<div class="caller-info text-center" ng-if="sipml5.state.calling || sipml5.state.callConnected">
+<div class="caller-info text-center"
+     ng-if="sipml5.state.calling || sipml5.state.callConnected || sipml5.state.incomingCall">
+    <div>
+        <h4 ng-if="sipml5.state.incomingCall && !sipml5.state.callConnected">Incoming Call</h4>
+        <h4 ng-if="sipml5.state.calling && !sipml5.state.callConnected">Outgoing Call</h4>
+    </div>
     <div class="caller-img">
         <i class="fa fa-user"></i>
     </div>
     <div class="caller-name">
-        <span ng-if="sipml5.state.calling">Calling</span>
         <span>{{sipml5.state.callerName || sipml5.state.callerNumber}}</span>
-        <span ng-if="sipml5.state.calling">...</span>
     </div>
     <div class="call-duration" ng-if="sipml5.state.callDuration">{{sipml5.state.callDuration | duration:'%h%:%m%:%s%'}}</div>
     <div class="call-controls">
+        <span class="fa-stack fa-lg accept-call-btn"
+              ng-if="sipml5.state.incomingCall && !sipml5.state.callConnected"
+              ng-click="sipml5.call()">
+          <i class="fa fa-circle fa-stack-2x"></i>
+          <i class="fa fa-phone fa-stack-1x fa-inverse"></i>
+        </span>
         <span class="fa-stack fa-lg hangup-btn" ng-click="sipml5.hangup()">
           <i class="fa fa-circle fa-stack-2x"></i>
           <i class="fa fa-phone fa-stack-1x fa-inverse"></i>

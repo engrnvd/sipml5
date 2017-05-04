@@ -209,6 +209,7 @@
                 -->
                 <label>Agent Ext: <input ng-model="agent.ext"></label><br>
                 <label>Agent Name: <input ng-model="agent.name"></label><br>
+                <button ng-click="init()">Init</button>
                 <button ng-click="register()">Register</button>
                 <label>Registered: <input type="checkbox" ng-model="sipml5.state.registered" checked></label><br>
                 <label>Incoming: <input type="checkbox" ng-model="sipml5.state.incomingCall"></label><br>

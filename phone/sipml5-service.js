@@ -232,36 +232,43 @@
 
         // makes a call (SIP INVITE)
         sip.call = function (type) {
-            sip.state.calling = true;
-            var phoneNumber = sip.state.callerNumber;
-            if (sip.stack && !sip.sessionCall && phoneNumber) { // outbound call
-                if (type == 'call-screenshare') {
-                    if (!SIPml.isScreenShareSupported()) {
-                        sip.state.errorMessage = 'Screen sharing not supported. Are you using chrome 26+?';
-                        return;
+            console.log(sip.sessionCall);
+            try {
+                var phoneNumber = sip.state.callerNumber;
+                if (sip.stack && !sip.sessionCall && phoneNumber) { // outbound call
+                    sip.state.calling = true;
+                    if (type == 'call-screenshare') {
+                        if (!SIPml.isScreenShareSupported()) {
+                            sip.state.errorMessage = 'Screen sharing not supported. Are you using chrome 26+?';
+                            return;
+                        }
+                        if (!location.protocol.match('https')) {
+                            sip.state.errorMessage = "Screen sharing requires https";
+                            return;
+                        }
                     }
-                    if (!location.protocol.match('https')) {
-                        sip.state.errorMessage = "Screen sharing requires https";
-                        return;
+
+                    // create call session
+                    sip.sessionCall = sip.stack.newSession(type, sip.configCall);
+                    // make call
+                    if (sip.sessionCall.call(phoneNumber) != 0) {
+                        sip.sessionCall = null;
+                        sip.state.callFailed = true;
+                        sip.state.calling = false;
                     }
                 }
-
-                // create call session
-                sip.sessionCall = sip.stack.newSession(type, sip.configCall);
-                // make call
-                if (sip.sessionCall.call(phoneNumber) != 0) {
+                else if (sip.sessionCall) { // inbound
+                    sip.sessionCall.accept(sip.configCall);
+                }
+            } catch (e) {
+                if (sip.sessionCall) {
+                    sip.hangup();
                     sip.sessionCall = null;
-                    sip.state.callFailed = true;
                 }
+                sip.state.callFailed = true;
+                sip.state.calling = false;
+                console.error(e);
             }
-            else if (sip.sessionCall) { // inbound
-                sip.sessionCall.accept(sip.configCall);
-            }
-
-            //if (sip.sessionCall) sip.state.callConnected = true;
-
-            //sip.state.calling = false;
-            //sip.state.incomingCall = false;
         };
 
         // Share entire desktop aor application using BFCP or WebRTC native implementation

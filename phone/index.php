@@ -190,7 +190,31 @@
                     </div>
                 </div>
             </div>
-            <div class="col-sm-8">
+            <div class="col-sm-4">
+                <!--
+  "registered": true,
+  "calling": false,
+  "callConnected": false,
+  "callDuration": 0,
+  "callFailed": false,
+  "transferringCall": false,
+  "callTransferred": false,
+  "isCallOnHold": false,
+  "isCallOnHoldByRemote": false,
+  "callMuted": false,
+  "incomingCall": false,
+  "callerName": "",
+  "callerNumber": "",
+  "fullScreen": false
+                -->
+                <label>Registered: <input type="checkbox" ng-model="sipml5.state.registered" checked></label><br>
+                <label>Incoming: <input type="checkbox" ng-model="sipml5.state.incomingCall"></label><br>
+                <label>Connected: <input type="checkbox" ng-model="sipml5.state.callConnected"></label><br>
+                <label>Calling: <input type="checkbox" ng-model="sipml5.state.calling"></label><br>
+                <button ng-click="sipml5.startCallTimer()">Start Call Timer</button>
+                <button ng-click="sipml5.stopCallTimer()">Stop Call Timer</button>
+            </div>
+            <div class="col-sm-4">
                 <pre>{{sipml5.state | json}}</pre>
                 <pre>{{sipml5.stackConfig | json}}</pre>
             </div>

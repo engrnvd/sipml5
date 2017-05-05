@@ -1,7 +1,7 @@
 (function () {
     angular.module('myApp').factory('sipml5', SIPml5);
 
-    function SIPml5($rootScope, $interval) {
+    function SIPml5($rootScope, $interval, nvdStorage) {
         var sip = {
             state: {
                 initializing: false,
@@ -37,6 +37,7 @@
             nativeDebug: false,
             disableVideo: false,
             callTimerId: null,
+            callsLog: [],
             stackConfig: {
                 realm: '',
                 impi: '',
@@ -59,6 +60,10 @@
             }
         };
 
+        sip.getCallsLogFromStorage = function () {
+            sip.callsLog = nvdStorage.get('callsLog');
+        };
+
         sip.startCallTimer = function () {
             sip.callTimerId = $interval(function () {
                 sip.state.callDuration ++;
@@ -69,6 +74,37 @@
             sip.state.callDuration = 0;
             $interval.cancel(sip.callTimerId);
             sip.callTimerId = null;
+        };
+
+        sip.currentCallInfo = function () {
+            var info = {
+                incoming: sip.state.incomingCall,
+                callDuration: sip.state.callDuration,
+                destinationNumber: sip.state.callerNumber,
+                destinationName: sip.state.callerName
+            };
+            info.endTime = new Date();
+            info.endTimeStamp = Math.floor(Date.now() / 1000);
+            info.startTimeStamp = info.endTimeStamp - info.callDuration;
+            info.startTime = new Date(info.startTimeStamp * 1000);
+            return info;
+        };
+
+        sip.saveCurrentCallLog = function () {
+            var log = sip.callsLog;
+            if (!log || !Array.isArray(log)) {
+                log = [];
+            }
+            log.unshift(sip.currentCallInfo());
+            nvdStorage.set('callsLog', log);
+            sip.getCallsLogFromStorage();
+        };
+
+        sip.clearCallLog = function () {
+            if (confirm('Are you sure?')) {
+                nvdStorage.remove('callsLog');
+                sip.getCallsLogFromStorage();
+            }
         };
 
         // var sTransferNumber;
@@ -130,6 +166,8 @@
                 if (sip.maxBandwidthDown) SIPml.setMaxBandwidthDown(parseFloat(sip.maxBandwidthDown));
                 if (sip.zeroArtifacts) SIPml.setZeroArtifacts(sip.zeroArtifacts);
                 if (sip.nativeDebug) SIPml.startNativeDebug();
+
+                sip.getCallsLogFromStorage();
 
                 //var rinningApps = SIPml.getRunningApps();
                 //var _rinningApps = Base64.decode(rinningApps);
@@ -302,7 +340,9 @@
         }
 
         // transfers the call
-        function sipTransfer() {
+        sip.transferCall = function () {
+            if (sip.state.transferringCall) return;
+
             if (!sip.sessionCall) {
                 sip.state.errorMessage = "No active call to transfer.";
                 return;
@@ -314,13 +354,13 @@
                 return;
             }
 
+            sip.state.transferringCall = true;
+            sip.state.message = 'Transferring call...';
             if (sip.sessionCall.transfer(s_destination) != 0) {
                 sip.state.errorMessage = 'Call transfer failed';
-                return;
+                sip.state.transferringCall = false;
             }
-
-            sip.state.transferringCall = true;
-        }
+        };
 
         // holds or resumes the call
         sip.toggleHoldResume = function () {
@@ -534,7 +574,12 @@
                     break;
                 } // 'connecting' | 'connected'
                 case 'terminating':
+                {
+                    // if (e.session == sip.sessionCall) {
+                    //     sip.saveCurrentCallLog();
+                    // }
                     sip.setState('message', "Terminating...");
+                }
                 case 'terminated':
                 {
                     if (e.session == sip.sessionRegister) {
@@ -542,6 +587,7 @@
                         sip.sessionRegister = null;
                     }
                     else if (e.session == sip.sessionCall) {
+                        sip.saveCurrentCallLog();
                         sip.stopCallTimer();
                         sip.sessionCall = null;
                         sip.setState('callConnected', false);
@@ -693,9 +739,9 @@
                 case 'o_ect_trying':
                 {
                     if (e.session == sip.sessionCall) {
+                        sip.setState('message', 'Call transfer in progress.');
                         sip.setState('transferringCall', true);
                         sip.setState('callTransferred', false);
-                        //txtCallStatus.innerHTML = '<i>Call transfer in progress...</i>';
                     }
                     break;
                 }
@@ -704,7 +750,7 @@
                     if (e.session == sip.sessionCall) {
                         sip.setState('transferringCall', false);
                         sip.setState('callTransferred', true);
-                        // txtCallStatus.innerHTML = '<i>Call transfer accepted</i>';
+                        sip.setState('message', 'Call transfer accepted.');
                     }
                     break;
                 }
@@ -714,8 +760,7 @@
                     if (e.session == sip.sessionCall) {
                         sip.setState('transferringCall', false);
                         sip.setState('callTransferred', true);
-                        // txtCallStatus.innerHTML = '<i>Call transfer completed</i>';
-                        // btnTransfer.disabled = false;
+                        sip.setState('message', 'Call transfer completed.');
                         if (sip.sessionTransferCall) {
                             sip.sessionCall = sip.sessionTransferCall;
                         }
@@ -727,7 +772,7 @@
                 case 'i_ect_failed':
                 {
                     if (e.session == sip.sessionCall) {
-                        sip.setState('errorMessage', 'Call transfer failed');
+                        sip.setState('errorMessage', 'Call transfer failed: '+e.description);
                         sip.setState('transferringCall', false);
                         sip.setState('callTransferred', false);
                     }
@@ -737,7 +782,6 @@
                 case 'i_ect_notify':
                 {
                     if (e.session == sip.sessionCall) {
-                        //txtCallStatus.innerHTML = "<i>Call Transfer: <b>" + e.getSipResponseCode() + " " + e.description + "</b></i>";
                         if (e.getSipResponseCode() >= 300) {
                             if (sip.sessionCall.bHeld) {
                                 sip.sessionCall.resume();
@@ -749,9 +793,9 @@
                 case 'i_ect_requested':
                 {
                     if (e.session == sip.sessionCall) {
-                        var s_message = "Do you accept call transfer to [" + e.getTransferDestinationFriendlyName() + "]?";//FIXME
+                        var s_message = "Accept call transfer to [" + e.getTransferDestinationFriendlyName() + "]?";
                         if (confirm(s_message)) {
-                            //txtCallStatus.innerHTML = "<i>Call transfer in progress...</i>";
+                            sip.setState('message', 'Call transfer in progress...');
                             sip.setState('transferringCall', true);
                             sip.sessionCall.acceptTransfer();
                             break;
@@ -761,10 +805,8 @@
                     break;
                 }
                 case 'sent_request':
-                    // sip.setState('message', "Request sent...");
                     break;
             }
-            //$rootScope.$broadcast('sipml-updated', sip);
         }
 
         return sip;

@@ -25,6 +25,7 @@
     </button>
 </div>
 <div class="clearfix"></div>
+
 <div class="caller-info text-center"
      ng-if="sipml5.state.calling || sipml5.state.callConnected || sipml5.state.incomingCall">
     <div>
@@ -72,9 +73,56 @@
           <i class="fa fa-circle fa-stack-2x"></i>
           <i class="fa fa-phone fa-stack-1x fa-inverse"></i>
         </span>
+        <!--Transfer-->
+        <span class="fa-stack fa-lg text-info call-control btn-transfer"
+              ng-class="{disabled: sipml5.state.transferringCall}"
+              ng-if="sipml5.state.callConnected"
+              uib-tooltip="{{sipml5.state.transferringCall? 'Transferring...' : 'Transfer the call'}}"
+              ng-click="sipml5.transferCall()">
+          <i class="fa fa-circle fa-stack-2x"></i>
+          <i class="fa fa-share fa-stack-1x fa-inverse"></i>
+        </span>
     </div>
 
 </div>
+
+<div ng-if="!(sipml5.state.calling || sipml5.state.callConnected || sipml5.state.incomingCall) && sipml5.state.registered && sipml5.callsLog && sipml5.callsLog.length">
+    <div class="box-header">
+        <h3 class="box-title">Recent Calls</h3>
+        <div class="box-tools pull-right">
+            <button type="button"
+                    ng-click="sipml5.clearCallLog()"
+                    class="btn btn-box-tool"
+                    data-widget="collapse">
+                Clear History
+            </button>
+        </div>
+    </div>
+    <div class="box-comments box-footer calls-log">
+        <div class="box-comment call-log" ng-repeat="log in sipml5.callsLog track by $index">
+            <!--missed-->
+            <i class="fa fa-arrow-left text-danger rotate-135n call-direction"
+               ng-if="log.incoming && !log.callDuration"
+            ></i>
+            <!--in-->
+            <i class="fa fa-arrow-left text-info rotate-45n call-direction"
+               ng-if="log.incoming && log.callDuration"
+            ></i>
+            <!--out-->
+            <i class="fa fa-arrow-left text-success rotate-135 call-direction"
+               ng-if="!log.incoming"
+            ></i>
+            <div class="comment-text">
+            <span class="username">
+                {{log.destinationName || log.destinationNumber}}
+                <span class="text-muted pull-right">{{log.callDuration | duration:'%h%:%m%:%s%'}}</span>
+            </span>
+                {{log.endTime | date:'MMMM dd, yyyy hh:mm:ss a'}}
+            </div>
+        </div>
+    </div>
+</div>
+
 <audio id="audio_remote" autoplay="autoplay"></audio>
 <audio id="ringtone" loop src="sounds/ringtone.wav"></audio>
 <audio id="ringbacktone" loop src="sounds/ringbacktone.wav"></audio>

@@ -168,6 +168,7 @@
     <script src="SIPml-api.js?svn=251" type="text/javascript"></script>
     <script src="app.js" type="text/javascript"></script>
     <script src="sipml5-service.js" type="text/javascript"></script>
+    <script src="local-storage-service.js" type="text/javascript"></script>
     <link rel="stylesheet" href="style.css">
 
 </head>
@@ -216,6 +217,7 @@
                 <label>Connected: <input type="checkbox" ng-model="sipml5.state.callConnected"></label><br>
                 <label>Calling: <input type="checkbox" ng-model="sipml5.state.calling"></label><br>
                 <label>Call on hold?: <input type="checkbox" ng-model="sipml5.state.isCallOnHold"></label><br>
+                <label>Transferring: <input type="checkbox" ng-model="sipml5.state.transferringCall"></label><br>
                 <button ng-click="sipml5.startCallTimer()">Start Call Timer</button>
                 <button ng-click="sipml5.stopCallTimer()">Stop Call Timer</button>
             </div>

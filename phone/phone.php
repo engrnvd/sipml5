@@ -1,3 +1,4 @@
+<!--registration form-->
 <div class="phone-number" ng-if="!sipml5.state.registered">
     <input class="form-control phone-input"
            type="password"
@@ -9,23 +10,26 @@
         <i class="fa fa-sign-in"></i>
     </button>
 </div>
+
+<!--call options-->
 <div class="phone-number" ng-if="sipml5.state.registered">
     <input class="form-control phone-input"
            ng-model="sipml5.state.callerNumber"
            placeholder="Phone number or sip address">
     <button class="btn btn-flat btn-success call-btn"
-        ng-disabled="sipml5.state.calling || sipml5.state.callConnected || sipml5.state.incomingCall"
+        ng-disabled="sipml5.state.calling || sipml5.state.callConnected || sipml5.state.incomingCall || !sipml5.state.callerNumber"
         ng-click="sipml5.call('call-audio')">
         <i class="fa fa-phone"></i>
     </button>
     <button class="btn btn-flat btn-success call-btn"
-        ng-disabled="sipml5.state.calling || sipml5.state.callConnected || sipml5.state.incomingCall"
+        ng-disabled="true || sipml5.state.calling || sipml5.state.callConnected || sipml5.state.incomingCall || !sipml5.state.callerNumber"
         ng-click="sipml5.call('call-audiovideo')">
         <i class="fa fa-video-camera"></i>
     </button>
 </div>
 <div class="clearfix"></div>
 
+<!--current call info-->
 <div class="caller-info text-center"
      ng-if="sipml5.state.calling || sipml5.state.callConnected || sipml5.state.incomingCall">
     <div>
@@ -83,9 +87,9 @@
           <i class="fa fa-share fa-stack-1x fa-inverse"></i>
         </span>
     </div>
-
 </div>
 
+<!--Recent calls-->
 <div ng-if="!(sipml5.state.calling || sipml5.state.callConnected || sipml5.state.incomingCall) && sipml5.state.registered && sipml5.callsLog && sipml5.callsLog.length">
     <div class="box-header">
         <h3 class="box-title">Recent Calls</h3>
@@ -123,13 +127,13 @@
     </div>
 </div>
 
+<!--audio files-->
 <audio id="audio_remote" autoplay="autoplay"></audio>
 <audio id="ringtone" loop src="sounds/ringtone.wav"></audio>
 <audio id="ringbacktone" loop src="sounds/ringbacktone.wav"></audio>
-<audio id="dtmfTone" src="sounds/dtmf.wav"></audio>
 
+<!--status messages-->
 <div class="status-msg text-danger" ng-if="sipml5.state.errorMessage">
-    <b>Error: </b>
-    {{sipml5.state.errorMessage}}
+    <b>Error: </b>{{sipml5.state.errorMessage}}
 </div>
 <div class="status-msg" ng-if="sipml5.state.message">{{sipml5.state.message}}</div>

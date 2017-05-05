@@ -349,7 +349,7 @@
             }
 
             var s_destination = prompt('Enter destination number', '');
-            if (s_destination) {
+            if (!s_destination) {
                 sip.state.errorMessage = "Please enter a destination.";
                 return;
             }
